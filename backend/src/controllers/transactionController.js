@@ -1,5 +1,6 @@
 // src/controllers/transactionController.js
 import prisma from '../lib/prisma.js';
+import { generateFinancialSummary } from '../services/aiService.js';
 
 // 1. Get All Transactions (with Filters)
 export const getTransactions = async (req, res) => {
@@ -287,6 +288,62 @@ export const updateTransaction = async (req, res) => {
     res.json(transaction);
   } catch (error) {
     console.error("Update Transaction Error:", error);
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
+// 5. Get AI Financial Summary
+export const getFinancialSummary = async (req, res) => {
+  try {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    const startOfMonth = new Date(currentYear, currentMonth, 1);
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+    
+    const startOfPrevMonth = new Date(currentYear, currentMonth - 1, 1);
+    const endOfPrevMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { monthlyBudget: true }
+    });
+
+    const [currentMonthAgg, prevMonthAgg] = await prisma.$transaction([
+      prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { userId: req.userId, date: { gte: startOfMonth, lte: endOfMonth } }
+      }),
+      prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: { userId: req.userId, date: { gte: startOfPrevMonth, lte: endOfPrevMonth } }
+      })
+    ]);
+
+    const currentTotal = currentMonthAgg._sum.amount ? parseFloat(currentMonthAgg._sum.amount) : 0;
+    const prevTotal = prevMonthAgg._sum.amount ? parseFloat(prevMonthAgg._sum.amount) : 0;
+    
+    let trendValue = 0;
+    if (prevTotal > 0) {
+      trendValue = ((currentTotal - prevTotal) / prevTotal) * 100;
+    }
+
+    const stats = {
+      totalSpent: currentTotal,
+      budget: user?.monthlyBudget ? parseFloat(user.monthlyBudget) : "Not Set",
+      trend: {
+        value: Math.abs(trendValue).toFixed(1),
+        isIncrease: trendValue > 0
+      }
+    };
+
+    const summary = await generateFinancialSummary(stats);
+    
+    res.json({ message: summary });
+
+  } catch (error) {
+    console.error("Summary Error:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };

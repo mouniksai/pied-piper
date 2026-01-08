@@ -58,11 +58,13 @@ router.get('/google/callback',
       }
 
       // D. Redirect to Frontend
-      res.redirect('http://localhost:3000/dashboard');
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/dashboard`);
 
     } catch (error) {
       console.error("Login Callback Error:", error);
-      res.redirect('http://localhost:3000/login?error=server_error');
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/login?error=server_error`);
     }
   }
 );

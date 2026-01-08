@@ -1,7 +1,7 @@
 // src/routes/transactions.js
 import express from 'express';
 import { verifyToken } from '../middlewares/auth.js'; // Protect these routes!
-import { getTransactions, getDashboardStats, createTransaction, updateTransaction } from '../controllers/transactionController.js';
+import { getTransactions, getDashboardStats, createTransaction, updateTransaction, getFinancialSummary } from '../controllers/transactionController.js';
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router.use(verifyToken);
 
 router.get('/', getTransactions);       // GET /api/transactions
 router.get('/stats', getDashboardStats); // GET /api/transactions/stats
+router.get('/summary', getFinancialSummary); // GET /api/transactions/summary
 router.post('/', createTransaction);       // POST /api/transactions (Manual Add)
 router.patch('/:id', updateTransaction);
 

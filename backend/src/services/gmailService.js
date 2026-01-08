@@ -8,10 +8,11 @@ const getGmailClient = async (userId) => {
   if (!user || !user.refreshToken) throw new Error("Missing Refresh Token");
 
   // Create a new client instance for each request to avoid race conditions
+  const backendUrl = process.env.BACKEND_BASE_URL || 'http://localhost:4000';
   const client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'http://localhost:4000/auth/google/callback'
+    `${backendUrl}/auth/google/callback`
   );
 
   client.setCredentials({
