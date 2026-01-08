@@ -1,102 +1,124 @@
-# ARGOS - Financial Intelligence Engine
+# ARGOS | Context-Aware Financial Intelligence
 
-Argos is a comprehensive expense tracking and financial intelligence system. It syncs with your email to automatically parse transactions, categorize them using AI, and allow you to ask natural language questions about your finances.
+ARGOS is a real-time financial tracking dashboard that automates expense management through direct Gmail integration. At its core, the system utilizes **Google Cloud Pub/Sub webhooks** to detect and process transaction alerts the instant they arrive in your inbox. This event-driven approach ensures that financial data is captured immediately, without the latency or overhead associated with traditional API polling.
 
-## 🏗Tech Stack
+Both the frontend and backend services are fully deployed and containerized, allowing for effortless setup and testing. Reviewers can pull the pre-built images directly from Docker Hub to run the application locally without complex environment configuration.
 
-* **Frontend:** Next.js (React)
-* **Backend:** Node.js (Express)
-* **AI Engine:** Python (Flask + PandasAI + Gemini)
-* **Database:** PostgreSQL (Prisma)
+## System Architecture
 
----
+The application is built on a modern microservices-inspired architecture:
 
-##  Quick Start (Docker)
-
-The easiest way to run the entire stack (Database, Backend, AI Service) is using Docker Compose.
-
-### 1. Unzip the Repository
+* **Frontend**: Next.js (React) dashboard for data visualization and interaction.
+* *Source Repository*: [https://github.com/thecodingvivek/pp/](https://github.com/thecodingvivek/pp/)
 
 
+* **Backend**: Node.js (Express) API handling authentication, business logic, and database operations.
+* **Database**: PostgreSQL (via Prisma ORM) for relational data storage.
+* **AI Engine**: Google Gemini Flash 1.5 for natural language processing and transaction extraction.
+* **Ingestion**: Gmail Push Notifications (Webhooks) via Google Cloud Pub/Sub.
 
-```
-
-### 2. Configure Environment Variables
-
-Create a `.env` file in the root directory (or update the existing one). You will need keys for Google Gemini and your database credentials.
-
-```env
-# Database
-DATABASE_URL=""
-
-# Google Auth & AI
-GOOGLE_CLIENT_ID="your_google_client_id"
-GOOGLE_CLIENT_SECRET="your_google_client_secret"
-GEMINI_API_KEY="your_gemini_api_key"
-
-# App URLs
-CLIENT_URL="http://localhost:3000"
-SERVER_URL="http://localhost:5000"
-
-```
-
-### 3. Build and Run
-
-Run the following command to build all services and start the application:
-
-```bash
-docker-compose up --build
-
-```
-
-* **Frontend:** Access at `https://pp-eta-mauve.vercel.app/`
-* **Backend API:** Access at `https://pied-piper-jcoc.onrender.com`
+<img width="8191" height="3511" alt="architecture-diagram" src="https://github.com/user-attachments/assets/d1a5cdae-7b34-4ad6-9127-5f28e0cf2b23" />
 
 
-To stop the services, press `Ctrl+C` or run:
+### Key Differentiator: Webhook-Based Ingestion
 
-```bash
-docker-compose down
+ARGOS distinguishes itself by strictly avoiding polling mechanisms. Instead, it registers a secure webhook watch on the user's Gmail inbox. When a new email arrives, Google pushes a notification to our server immediately. The system then fetches the specific message, parses the financial details using AI, and updates the dashboard in near real-time. This architecture ensures immediate responsiveness and efficient resource usage.
 
-```
+## Features
 
----
+1. **Real-Time Transaction Sync**: Expenses appear on the dashboard seconds after the payment confirmation email is received via webhook triggers.
+2. **AI-Powered Parsing**: Extract merchant names, amounts, currencies, and categories from complex email bodies using Generative AI.
+3. **Social Expense Splitting**: Seamlessly split bills with friends imported directly from Google Contacts.
+4. **Debt Enforcement**: An automated "Nudge" system that sends email reminders to debtors with varying levels of urgency (Polite, Firm, Aggressive).
+5. **Recurring Expenses**: Specialized tracking for fixed monthly costs like rent and subscriptions.
 
-## 🧪 How to Test AI Classification
+## Prerequisites
 
-Argos uses an intelligent parser to read transaction emails and categorize them automatically. Follow these steps to verify the classification works:
+To run this project locally, ensure you have the following installed:
 
-### 1. Connect your Gmail
+* **Docker Desktop** (and Docker Compose)
+* **Ngrok** (Required for local testing of Gmail Webhooks)
 
-Login to the Argos Dashboard (`http://localhost:3000`) and link your Google Account.
+## Installation and Setup
 
-### 2. Send a Sample Transaction Email
+This project is containerized for easy deployment. You do not need to install Node.js or PostgreSQL locally to run the application, as the images are pulled directly from our registry.
 
-Send an email **TO** your connected Gmail account (from a different email address) with the following sample content. This simulates a real bank or merchant notification.
+### 1. Configuration
 
-**Subject:** Transaction Alert: Payment of INR 450.00
-**Body:**
+Navigate to the `infra` directory and create a `.env` file. You will need the following credentials:
 
 ```text
-Dear Customer, 
+# infra/.env
 
-You have paid INR 450.00 to SWIGGY via UPI. 
-Transaction ID: 123456789 
-Date: 25-01-2026
-Bank: HDFC Bank
+# Database Configuration (Handled by Docker)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=hackathonpassword
+POSTGRES_DB=argos_db
+
+# Google OAuth Credentials
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Authentication & AI
+JWT_SECRET=your_secure_random_string
+GEMINI_API_KEY=your_gemini_api_key
+
+# Application URLs
+PORT=4000
+FRONTEND_URL=http://localhost:3000
 
 ```
 
-### 3. Verify in Dashboard
+### 2. Launching the Application
 
-1. Wait a moment for the system to poll your inbox (or click **Sync Now** in the dashboard).
-2. Go to the **Transactions** tab.
-3. You should see the transaction appear automatically.
-4. **Check the Category:** The AI should have automatically classified this as **"Food & Dining"** or **"Food"** based on the merchant "SWIGGY".
+Run the following command from the `infra` folder to pull the deployed images and start the system:
 
----
+```bash
+cd infra
+docker-compose up
 
-## 🛠 Troubleshooting
+```
 
-* **"Oauth Redirect Mismatch":** Ensure your Google Cloud Console "Authorized Redirect URIs" matches `http://localhost:5000/auth/google/callback`.
-* **Docker Database Connection:** If the backend fails to connect to the DB immediately, wait a few seconds; the container will retry until the database is ready.
+This command will:
+
+1. Pull the pre-built backend and frontend images from Docker Hub.
+2. Initialize the PostgreSQL database schema.
+3. Start all services on their respective ports.
+
+### 3. Exposing Webhooks (Local Development Only)
+
+Because Google's Pub/Sub service cannot reach your `localhost` directly, you must expose your backend port using Ngrok to test the live email ingestion feature.
+
+```bash
+ngrok http 4000
+
+```
+
+*Note: Update your Google Cloud Console "Pub/Sub Subscription" endpoint to match the URL provided by Ngrok.*
+
+## Usage
+
+Once the containers are running:
+
+* **Frontend Dashboard**: Access the application at `http://localhost:3000`.
+* **Backend API**: The API is available at `http://localhost:4000`.
+
+### Login
+
+Click "Continue with Google" to authenticate. You may see a verification warning screen; as this is a hackathon project, click "Advanced" and "Go to App (unsafe)" to proceed.
+
+### Testing the Pipeline
+
+1. Send an email to your connected Gmail account with a subject like "Transaction Alert".
+2. Include body text such as: "Paid Rs 500 to Swiggy for food."
+3. Watch the server logs or refresh the dashboard to see the transaction appear automatically via the webhook.
+
+## API Documentation
+
+The backend exposes several key endpoints for developers:
+
+* `GET /auth/google`: Initiates the OAuth flow.
+* `GET /api/transactions`: Retrieves paginated transaction history.
+* `POST /api/transactions`: Manually create a transaction.
+* `POST /api/splits`: Split a transaction with contacts.
+* `POST /api/splits/nudge`: Trigger an email reminder for a specific debt.
