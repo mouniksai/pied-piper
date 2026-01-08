@@ -42,7 +42,7 @@ router.get('/google/callback',
     });
 
     // Redirect to Frontend
-    res.redirect('http://localhost:3000/dashboard');
+    res.redirect(`http://localhost:3000//auth/callback?token=${token}`);
   }
 );
 
