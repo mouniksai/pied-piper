@@ -1,5 +1,14 @@
 // src/index.js
 import 'dotenv/config';
+
+// STRICT ENV CHECK
+const requiredEnv = ['JWT_SECRET', 'GEMINI_API_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+  console.error(`🚨 CRITICAL: Missing environment variables: ${missingEnv.join(', ')}`);
+  // process.exit(1); // Commented out to prevent crash if running locally without all keys for dev
+}
+
 import express from 'express';
 import cors from 'cors';
 import passport from 'passport';

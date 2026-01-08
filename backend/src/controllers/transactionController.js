@@ -5,7 +5,14 @@ import prisma from '../lib/prisma.js';
 export const getTransactions = async (req, res) => {
   try {
     // Extract new query params: startDate, endDate
-    const { page = 1, limit = 20, category, startDate, endDate } = req.query;
+    let { page = 1, limit = 20, category, startDate, endDate } = req.query;
+    
+    // Validate Pagination
+    page = parseInt(page);
+    limit = parseInt(limit);
+    if (isNaN(page) || page < 1) page = 1;
+    if (isNaN(limit) || limit < 1) limit = 20;
+
     const skip = (page - 1) * limit;
 
     // Build the dynamic 'where' clause
@@ -20,13 +27,18 @@ export const getTransactions = async (req, res) => {
     if (startDate || endDate) {
       where.date = {};
       if (startDate) {
-        where.date.gte = new Date(startDate); // Greater than or equal to Start
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          where.date.gte = start; 
+        }
       }
       if (endDate) {
         // Set end date to end of day to include transactions on that day
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        where.date.lte = end; // Less than or equal to End
+        if (!isNaN(end.getTime())) {
+          end.setHours(23, 59, 59, 999);
+          where.date.lte = end;
+        }
       }
     }
 

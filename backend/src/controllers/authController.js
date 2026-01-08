@@ -119,10 +119,14 @@ export const updateBudget = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000), // Expire in 10 seconds
-    httpOnly: true
-  });
+  for(const cookie in req.cookies) {
+    res.clearCookie(cookie, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: '/',
+    });
+  }
 
-  res.status(200).json({ success: true, message: "Logged out successfully" });
+  return res.json({ success: true, message: "Logged out successfully" });
 };
