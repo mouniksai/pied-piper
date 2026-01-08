@@ -3,12 +3,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(cors(), express.json());
 
-// Your Hardcoded Key
-const API_KEY = "AIzaSyBS1cKk0AdOo_ThGMcw6REpNMd-sp9VYyg";
+// Load Key from Environment
+const API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // --- SIMULATED FINTECH BACKEND ---
@@ -94,8 +95,8 @@ app.post('/chat', async (req, res) => {
     if (!chats[userId]) {
         chats[userId] = model.startChat({
             history: [
-                { role: "user", parts: [{ text: "You are a specialized Fintech Assistant. Use the provided tools to fetch financial data when asked. Always answer in a helpful, concise manner." }] },
-                { role: "model", parts: [{ text: "Understood. I am ready to help you manage your finances." }] }
+                { role: "user", parts: [{ text: "You are a specialized Fintech Assistant. Use the provided tools to fetch financial data when asked. Always answer in a helpful, concise manner. Do NOT use markdown bolding (**) in your responses, especially for numbers." }] },
+                { role: "model", parts: [{ text: "Understood. I will help you with your finances and provide plain text responses without bold formatting." }] }
             ]
         });
     }
@@ -107,8 +108,6 @@ app.post('/chat', async (req, res) => {
         let functionCalls = response.functionCalls();
 
         // Handle Function Calls loop (Simulate agentic loop)
-        // Note: For simple single-turn tools, this if-block effectively handles it.
-        // For multi-turn, you'd loop. Here we assume one tool call per turn for simplicity.
         if (functionCalls && functionCalls.length > 0) {
             const call = functionCalls[0];
             const fnName = call.name;
@@ -139,7 +138,11 @@ app.post('/chat', async (req, res) => {
             response = await result.response;
         }
 
-        const text = response.text();
+        let text = response.text();
+
+        // Final cleanup for any stray markdown bolding
+        text = text.replace(/\*\*/g, '');
+
         res.json({ type: 'text', content: text });
 
     } catch (err) {
