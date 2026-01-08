@@ -11,10 +11,10 @@ const TransactionsTable = () => {
     ];
 
     return (
-        <motion.div variants={itemVariants} className="bg-[#1C1C1E] p-6 rounded-3xl col-span-1 lg:col-span-3">
+        <motion.div variants={itemVariants} className="bg-app-card p-6 rounded-3xl col-span-1 lg:col-span-3">
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-white">Recent Transactions</h3>
-                <button className="w-8 h-8 rounded-full bg-[#CDC9EF] flex items-center justify-center text-[#0A0A0A] hover:bg-white transition-colors">
+                <button className="w-8 h-8 rounded-full bg-app-lavender flex items-center justify-center text-[#0A0A0A] hover:bg-white transition-colors">
                     <span className="text-lg font-bold">↗</span>
                 </button>
             </div>
@@ -43,7 +43,7 @@ const TransactionsTable = () => {
                                 </td>
                                 <td className="py-4 text-sm text-gray-300">{t.type}</td>
                                 <td className="py-4">
-                                    <span className="bg-[#D8EFA8] text-[#0A0A0A] text-xs font-bold px-3 py-1 rounded-full">
+                                    <span className="bg-app-lime text-[#0A0A0A] text-xs font-bold px-3 py-1 rounded-full">
                                         {t.status}
                                     </span>
                                 </td>
