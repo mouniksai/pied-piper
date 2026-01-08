@@ -1,4 +1,8 @@
+"use client";
+
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Home, 
@@ -10,13 +14,13 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
+  const pathname = usePathname();
+
   const menuItems = [
-    { icon: Home, label: 'Home', active: true },
-    { icon: CreditCard, label: 'Expenses' },
-    { icon: FileText, label: 'Reports' },
-    { icon: Settings, label: 'Settings' },
-    { icon: Info, label: 'About Us' },
-    { icon: Shield, label: 'Privacy' },
+    { icon: Home, label: 'Home', href: '/dashboard' },
+    { icon: CreditCard, label: 'Expenses', href: '/expenses' },
+    { icon: FileText, label: 'Summary', href: '/summary' },
+    { icon: Shield, label: 'Privacy', href: '/privacy' },
   ];
 
   return (
@@ -28,22 +32,27 @@ const Sidebar = () => {
       <div className="text-2xl font-bold text-white mb-10 pl-2">Dash<span className="text-app-lime">board</span></div>
       
       <nav className="space-y-2 flex-1">
-        {menuItems.map((item, index) => (
-          <button
-            key={index}
-            className={`flex items-center w-full p-3 rounded-xl transition-all duration-300 ${
-              item.active 
-                ? 'bg-app-lime text-[#0A0A0A] font-semibold shadow-lg shadow-app-lime/20' 
-                : 'text-gray-400 hover:bg-app-card hover:text-white'
-            }`}
-          >
-            <item.icon size={20} className="mr-3" />
-            {item.label}
-          </button>
-        ))}
+        {menuItems.map((item, index) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={index}
+              href={item.href}
+              className={`flex items-center w-full p-3 rounded-xl transition-all duration-300 ${
+                isActive 
+                  ? 'bg-app-lime text-[#0A0A0A] font-semibold shadow-lg shadow-app-lime/20' 
+                  : 'text-gray-400 hover:bg-app-card hover:text-white'
+              }`}
+            >
+              <item.icon size={20} className="mr-3" />
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </motion.aside>
   );
 };
+
 
 export default Sidebar;

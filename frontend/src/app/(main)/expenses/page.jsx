@@ -16,6 +16,8 @@ import {
   ChevronDown,
   Calendar
 } from 'lucide-react';
+// import Sidebar from '../../../components/dashboard/Sidebar'; // Removed
+import Header from '../../../../components/dashboard/Header';
 
 // --- PALETTE CONSTANTS ---
 // Bg: #0A0A0A | Card: #1C1C1E | Text: #FFFFFF | Lime: #D8EFA8 | Lavender: #CDC9EF
@@ -230,7 +232,10 @@ export default function ExpensesPage() {
   const [selectedTx, setSelectedTx] = useState(null);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white font-sans p-6 md:p-12">
+    <div className="flex-auto h-screen overflow-hidden p-4 md:p-8 font-sans">
+        <Header />
+        <div className="h-full overflow-y-auto pb-20">
+          <div className="p-2 md:p-4">
       
       {/* Page Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
@@ -326,6 +331,8 @@ export default function ExpensesPage() {
         )}
       </AnimatePresence>
 
+          </div>
+        </div>
     </div>
   );
 }

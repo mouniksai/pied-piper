@@ -103,10 +103,8 @@ export const getDashboardStats = async (req, res) => {
     });
 
     // 4. Daily Stats for Chart
-    // Prisma doesn't support grouping by date part easily in all DBs without raw query.
-    // Fetching all transactions for the month implies lighter load than raw query sometimes, 
-    // but raw query is better for aggregation. Let's use raw query or js grouping.
-    // Since it's a personal expense tracker, volume per month is likely low (<1000). JS grouping is fine.
+    // ... (existing code explanation) ...
+    // ...
     
     const transactions = await prisma.transaction.findMany({
       where: {
@@ -122,15 +120,6 @@ export const getDashboardStats = async (req, res) => {
       }
     });
 
-    // Bucket into days or weeks ( ExpenseDataCard MOCK_DATA has ~7 points, likely weekly or simplified daily)
-    // Let's create an array of values for the chart. 
-    // If the mock data has ~7 points, maybe we can aggregate into, say, every 3-4 days or just return daily sums.
-    // However, the card might expect specific number of points?
-    // The previous MOCK_DATA had 7 points. Let's try to give daily data or weekly.
-    // Let's stick to daily data for better granularity if the chart supports it, or aggregate to 4 weeks.
-    // The mock data keys were 'Nov 2023' etc.
-    // Let's return the daily series and let frontend handle visualization.
-    
     // Initialize day map
     const daysInMonth = endOfMonth.getDate();
     const dailyData = new Array(daysInMonth).fill(0);
@@ -142,25 +131,71 @@ export const getDashboardStats = async (req, res) => {
       }
     });
 
-    // To match the mock data style (array of numbers), we can just return dailyData.
-    // Or if we want to compress it to 7 points (like weekly segments), we can do that too.
-    // 30 days / 7 ≈ 4 days per point.
-    // Let's just return daily stats and let's update frontend to maybe use "Total per week" or just "Daily trend".
-    // For now, returning full daily array might be most flexible.
-    
+    // --- NEW: Global Stats (Today, Splits, counts) ---
+    // These are independent of the month filter usually, but "Today" is specific to "Now".
+    // 1. Today's Expense
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const todayStats = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: {
+        userId: req.userId,
+        date: { gte: todayStart, lte: todayEnd }
+      }
+    });
+
+    // 2. Pending Approval (Uncategorized count)
+    const uncategorizedCount = await prisma.transaction.count({
+      where: {
+        userId: req.userId,
+        category: "Uncategorized"
+      }
+    });
+
+    // 3. To Get (Money owe to me)
+    // Find Splits where I am the owner of the Transaction (implicitly handled by transaction relation if we query properly)
+    // Wait, Split model links to Transaction. Transaction links to User.
+    // So splits on MY transactions are money owed TO me.
+    const toGetStats = await prisma.split.aggregate({
+      _sum: { amount: true },
+      where: {
+        transaction: {
+          userId: req.userId
+        },
+        status: "PENDING"
+      }
+    });
+
+    // 4. To Pay (Money I owe others) - Checking where I am the 'owedByUserId'
+    const toPayStats = await prisma.split.aggregate({
+      _sum: { amount: true },
+      where: {
+        owedByUserId: req.userId,
+        status: "PENDING"
+      }
+    });
+
     res.json({
       totalSpent: currentTotal,
       prevTotalSpent: prevTotal,
       trend: {
         value: Math.abs(trendValue).toFixed(1),
         isIncrease: isIncrease,
-        isPositive: !isIncrease // Assuming spending less (decrease) is positive for expenses
+        isPositive: !isIncrease
       },
       categoryBreakdown: categoryStats.map(stat => ({
         category: stat.category,
         amount: parseFloat(stat._sum.amount || 0)
       })),
-      dailyStats: dailyData
+      dailyStats: dailyData,
+      // Global/Sidebar Stats
+      todayExpense: parseFloat(todayStats._sum.amount || 0),
+      pendingCount: uncategorizedCount,
+      youOwe: parseFloat(toPayStats._sum.amount || 0),
+      owedToYou: parseFloat(toGetStats._sum.amount || 0)
     });
   } catch (error) {
     console.error("Stats Error:", error);
