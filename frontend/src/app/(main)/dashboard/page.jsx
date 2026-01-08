@@ -21,8 +21,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchGlobalStats = async () => {
       try {
-        // Fetch stats without params to get current month defaults + global stats
-        const res = await fetch('http://localhost:4000/api/transactions/stats', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/stats`, {
           credentials: 'include'
         });
         if (res.ok) {

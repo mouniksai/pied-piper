@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 import { 
   X, 
   Search, 
@@ -21,66 +22,6 @@ import Header from '../../../../components/dashboard/Header';
 
 // --- PALETTE CONSTANTS ---
 // Bg: #0A0A0A | Card: #1C1C1E | Text: #FFFFFF | Lime: #D8EFA8 | Lavender: #CDC9EF
-
-// --- MOCK DATA ---
-const transactions = [
-  { 
-    id: 1, 
-    merchant: "Starbucks Coffee", 
-    date: "Oct 24, 2023", 
-    time: "08:30 AM",
-    amount: -450, 
-    type: "expense",
-    category: "Food & Drink", 
-    bankName: "HDFC Bank",
-    accountLast4: "4022",
-    status: "Completed",
-    utr: "HDFCN23102488392",
-    sourceSnippet: "Dear Customer, INR 450.00 debited from a/c **4022 on 24-10-23 to VPA starbucks@hdfc. Info: COFFEE. Avl Bal: INR 24,000."
-  },
-  { 
-    id: 2, 
-    merchant: "Client Payment - Upwork", 
-    date: "Oct 23, 2023", 
-    time: "02:15 PM",
-    amount: 12500, 
-    type: "income",
-    category: "Freelance", 
-    bankName: "HDFC Bank",
-    accountLast4: "4022",
-    status: "Completed",
-    utr: "UPW23102399100",
-    sourceSnippet: "Credit Alert: INR 12,500.00 credited to a/c **4022 on 23-10-23 via NEFT. Ref: UPW23102399100. Avl Bal: INR 24,450."
-  },
-  { 
-    id: 3, 
-    merchant: "Uber Ride", 
-    date: "Oct 22, 2023", 
-    time: "09:45 PM",
-    amount: -320, 
-    type: "expense",
-    category: "Travel", 
-    bankName: "HDFC Bank",
-    accountLast4: "4022",
-    status: "Completed",
-    utr: "UBR23102277481",
-    sourceSnippet: "Dear Customer, INR 320.00 debited from a/c **4022 on 22-10-23 to VPA uber@axis. Info: RIDE. Avl Bal: INR 11,950."
-  },
-  { 
-    id: 4, 
-    merchant: "Amazon Purchase", 
-    date: "Oct 20, 2023", 
-    time: "11:20 AM",
-    amount: -2100, 
-    type: "expense",
-    category: "Shopping", 
-    bankName: "SBI Savings",
-    accountLast4: "8812",
-    status: "Completed",
-    utr: "AMZ23102011234",
-    sourceSnippet: "Txn Alert: INR 2,100.00 debited from a/c **8812 via Debit Card at AMAZON RETAIL. Ref: 774839201."
-  },
-];
 
 // --- ANIMATION VARIANTS ---
 const listVariants = {
@@ -230,6 +171,43 @@ const TransactionInspector = ({ transaction, onClose }) => {
 
 export default function ExpensesPage() {
   const [selectedTx, setSelectedTx] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions?limit=50`, {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Map API data to UI structure
+          const mapped = (data.transactions || []).map(tx => ({
+            id: tx.id,
+            merchant: tx.merchant || "Unknown",
+            date: format(new Date(tx.date), "MMM dd, yyyy"),
+            time: format(new Date(tx.date), "hh:mm a"),
+            amount: parseFloat(tx.amount), // ensure number
+            type: parseFloat(tx.amount) < 0 ? 'expense' : 'income',
+            category: tx.category || "Uncategorized",
+            bankName: "HDFC Bank", // Placeholder for now
+            accountLast4: "XXXX",  // Placeholder
+            status: "Completed",
+            utr: `TXN${tx.id}`,
+            sourceSnippet: tx.description || "No specific details available."
+          }));
+          setTransactions(mapped);
+        }
+      } catch (error) {
+        console.error("Failed to fetch transactions", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
 
   return (
     <div className="flex-auto h-screen overflow-hidden p-4 md:p-8 font-sans">
@@ -257,10 +235,7 @@ export default function ExpensesPage() {
       </header>
 
       {/* Transaction List Container */}
-      <motion.div 
-        variants={listVariants}
-        initial="hidden"
-        animate="visible"
+      <div 
         className="bg-[#1C1C1E] rounded-3xl overflow-hidden shadow-lg"
       >
         {/* Table Header */}
@@ -274,10 +249,16 @@ export default function ExpensesPage() {
 
         {/* Rows */}
         <div className="divide-y divide-gray-800/50">
-          {transactions.map((tx) => (
+          {loading ? (
+             <div className="p-8 text-center text-gray-500">Loading transactions...</div>
+          ) : transactions.length === 0 ? (
+             <div className="p-8 text-center text-gray-500">No transactions found.</div>
+          ) : (
+             transactions.map((tx) => (
             <motion.div 
               key={tx.id}
-              variants={rowVariants}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               onClick={() => setSelectedTx(tx)}
               className="grid grid-cols-12 gap-4 p-5 hover:bg-white/5 cursor-pointer transition-colors group items-center"
             >
@@ -317,9 +298,9 @@ export default function ExpensesPage() {
                 {tx.type === 'expense' ? '-' : '+'} ₹{Math.abs(tx.amount)}
               </div>
             </motion.div>
-          ))}
+          )))}
         </div>
-      </motion.div>
+      </div>
 
       {/* MODAL IMPLEMENTATION */}
       <AnimatePresence>

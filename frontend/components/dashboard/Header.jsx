@@ -40,7 +40,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       // Call backend to clear cookies
-      await fetch("http://localhost:4000/auth/logout", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
         method: "POST", // or GET depending on your route, usually POST for logout
         credentials: "include"
       });

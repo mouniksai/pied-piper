@@ -25,7 +25,7 @@ const Step2Login = () => {
         <p className="text-gray-500">Enter your credentials to access your account.</p>
       </div>
 
-      <form action="http://localhost:4000/auth/google" method="GET">
+      <form action={`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`} method="GET">
         <button 
           type="submit"
           className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 p-2.5 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 mb-4 cursor-pointer"

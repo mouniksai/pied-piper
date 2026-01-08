@@ -51,7 +51,7 @@ const ExpenseDataCard = ({
                 const year = selectedDate.getFullYear();
                 const month = selectedDate.getMonth() + 1;
                 
-                const response = await fetch(`http://localhost:4000/api/transactions/stats?month=${month}&year=${year}`, {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions/stats?month=${month}&year=${year}`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include'

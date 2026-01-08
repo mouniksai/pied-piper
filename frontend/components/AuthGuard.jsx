@@ -20,7 +20,7 @@ const AuthGuard = ({ children }) => {
     const hasRefreshToken = document.cookie.split('; ').find(row => row.startsWith('refreshToken='));
 
     if (isAuthenticated && !hasRefreshToken) {
-      fetch('http://localhost:4000/api/test/watch', {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/test/watch`, {
         method: 'POST',
         credentials: 'include'
       })

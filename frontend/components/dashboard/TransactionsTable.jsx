@@ -24,7 +24,7 @@ const TransactionsTable = () => {
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
-                const res = await fetch('http://localhost:4000/api/transactions?limit=3', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions?limit=3`, {
                     credentials: 'include',
                 });
                 if (res.ok) {
