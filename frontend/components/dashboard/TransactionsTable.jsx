@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Coffee, Plane, Briefcase, ShoppingBag, Utensils, Car, Home } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -20,11 +21,12 @@ const getCategoryIcon = (category) => {
 const TransactionsTable = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
-                const res = await fetch('http://localhost:4000/api/transactions?limit=3', {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/transactions?limit=2`, {
                     credentials: 'include',
                 });
                 if (res.ok) {
@@ -43,17 +45,20 @@ const TransactionsTable = () => {
 
     if (loading) {
         return (
-            <motion.div variants={itemVariants} className="bg-app-card p-6 rounded-3xl col-span-1 lg:col-span-3 h-64 flex items-center justify-center">
+            <motion.div variants={itemVariants} className="bg-app-card p-6 rounded-3xl h-64 flex items-center justify-center">
                 <p className="text-gray-400">Loading transactions...</p>
             </motion.div>
         );
     }
 
     return (
-        <motion.div variants={itemVariants} className="bg-app-card p-6 rounded-3xl col-span-1 lg:col-span-3">
+        <motion.div variants={itemVariants} className="bg-app-card p-6 rounded-3xl">
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-white">Recent Transactions</h3>
-                <button className="w-8 h-8 rounded-full bg-app-lavender flex items-center justify-center text-[#0A0A0A] hover:bg-white transition-colors">
+                <button 
+                    onClick={() => router.push('/expenses')}
+                    className="w-8 h-8 rounded-full bg-app-lavender flex items-center justify-center text-[#0A0A0A] hover:bg-white transition-colors cursor-pointer"
+                >
                     <span className="text-lg font-bold">↗</span>
                 </button>
             </div>

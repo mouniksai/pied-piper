@@ -73,6 +73,12 @@ export const getDashboardStats = async (req, res) => {
     const startOfPrevMonth = new Date(currentYear, currentMonth - 1, 1);
     const endOfPrevMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59, 999);
 
+    // Get User Budget
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { monthlyBudget: true }
+    });
+
     // 1. Total Spent This Month
     const currentMonthAgg = await prisma.transaction.aggregate({
       _sum: { amount: true },
@@ -214,7 +220,9 @@ export const getDashboardStats = async (req, res) => {
       todayExpense: parseFloat(todayStats._sum.amount || 0),
       pendingCount: uncategorizedCount,
       youOwe: parseFloat(toPayStats._sum.amount || 0),
-      owedToYou: parseFloat(toGetStats._sum.amount || 0)
+      owedToYou: parseFloat(toGetStats._sum.amount || 0),
+      // Budget Logic
+      budget: user?.monthlyBudget ? Number(user.monthlyBudget) : 0,
     });
   } catch (error) {
     console.error("Stats Error:", error);

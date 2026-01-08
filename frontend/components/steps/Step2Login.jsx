@@ -14,7 +14,7 @@ const Step2Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateStep()) {
-       console.log("Logging in with:", formData);
+       // Proceed to login
     }
   };
 
@@ -25,15 +25,14 @@ const Step2Login = () => {
         <p className="text-gray-500">Enter your credentials to access your account.</p>
       </div>
 
-      <form action="http://localhost:4000/auth/google" method="GET">
-        <button 
-          type="submit"
-          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 p-2.5 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 mb-4 cursor-pointer"
-        >
-          <GoogleIcon />
-          Sign in with Google
-        </button>
-      </form>
+      <button 
+        type="button"
+        onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`}
+        className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 p-2.5 rounded-xl hover:bg-gray-50 transition-all font-semibold text-gray-700 mb-4 cursor-pointer"
+      >
+        <GoogleIcon />
+        Sign in with Google
+      </button>
 
       <div className="relative flex py-1 items-center mb-4">
         <div className="grow border-t border-gray-200"></div>

@@ -40,18 +40,12 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       // Call backend to clear cookies
-      await fetch("http://localhost:4000/auth/logout", {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
         method: "POST", // or GET depending on your route, usually POST for logout
         credentials: "include"
       });
-      
-      // Manual cookie deletion (Frontend)
-      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
       // Clear client state
       logout();
-      
       // Redirect
       router.push('/login');
     } catch (error) {

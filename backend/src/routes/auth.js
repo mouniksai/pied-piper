@@ -2,14 +2,16 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { signup, login, logout } from '../controllers/authController.js';
+import { signup, login, logout, updateBudget } from '../controllers/authController.js';
 import { watchGmail } from '../services/gmailService.js'; 
+import { verifyToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // --- DIRECT AUTH ROUTES ---
 router.post('/signup', signup);
 router.post('/login', login);
+router.put('/budget', verifyToken, updateBudget);
 
 // --- GOOGLE OAUTH ROUTES ---
 router.get('/google', passport.authenticate('google', {
