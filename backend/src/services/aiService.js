@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const parseTransactionWithAI = async (emailSnippet, emailDate) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemma-3-4b" });
 
     const prompt = `
       You are a financial parser. Extract transaction details from the email snippet below.
