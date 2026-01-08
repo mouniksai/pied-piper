@@ -2,13 +2,15 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { signup, login, logout } from '../controllers/authController.js'; // Import controller
+import { signup, login, logout, getMe } from '../controllers/authController.js'; // Import controller
 import { sendTokenResponse } from '../lib/authUtils.js';
+import { verifyToken } from '../middlewares/auth.js';
 
 
 const router = express.Router();
 
 // --- DIRECT AUTH ROUTES ---
+router.get('/me', verifyToken, getMe);
 router.post('/signup', signup);
 router.post('/login', login);
 
@@ -42,7 +44,7 @@ router.get('/google/callback',
     });
 
     // Redirect to Frontend
-    res.redirect(`http://localhost:3000//auth/callback?token=${token}`);
+    res.redirect(`http://localhost:3000/dashboard`);
   }
 );
 

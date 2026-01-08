@@ -14,6 +14,26 @@ const generateToken = (user) => {
 };
 
 // 1. SIGNUP
+export const getMe = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    console.error("GetMe Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const signup = async (req, res) => {
   try {
     const { email, password, name } = req.body;
