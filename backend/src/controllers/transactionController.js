@@ -4,22 +4,40 @@ import prisma from '../lib/prisma.js';
 // 1. Get All Transactions (with Filters)
 export const getTransactions = async (req, res) => {
   try {
-    const { page = 1, limit = 20, category } = req.query;
+    // Extract new query params: startDate, endDate
+    const { page = 1, limit = 20, category, startDate, endDate } = req.query;
     const skip = (page - 1) * limit;
 
+    // Build the dynamic 'where' clause
     const where = {
-      userId: req.userId, // Secure: only fetch OWN data
-      ...(category && { category }), // Optional filter
+      userId: req.userId, // Security: Only fetch own data
+      
+      // 1. Optional Category Filter
+      ...(category && { category }), 
     };
 
-    // Parallel fetch: Data + Count (for pagination)
+    // 2. Optional Date Range Filter
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate) {
+        where.date.gte = new Date(startDate); // Greater than or equal to Start
+      }
+      if (endDate) {
+        // Set end date to end of day to include transactions on that day
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.date.lte = end; // Less than or equal to End
+      }
+    }
+
+    // Parallel fetch: Data + Count (for pagination UI)
     const [transactions, total] = await prisma.$transaction([
       prisma.transaction.findMany({
         where,
         skip: parseInt(skip),
-        take: parseInt(limit),
+        take: parseInt(limit), // 3. Controls the "Limited Number"
         orderBy: { date: 'desc' }, // Newest first
-        include: { splits: true }  // Show who owes you on this transaction
+        include: { splits: true }
       }),
       prisma.transaction.count({ where })
     ]);
@@ -29,6 +47,7 @@ export const getTransactions = async (req, res) => {
       pagination: {
         total,
         page: parseInt(page),
+        limit: parseInt(limit),
         pages: Math.ceil(total / limit)
       }
     });
