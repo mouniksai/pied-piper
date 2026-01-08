@@ -23,6 +23,8 @@ model User {
   refreshToken  String?   @db.Text // Long-lived token for offline syncing
   tokenExpiry   BigInt?   // Storing expiry as timestamp is often safer for math
   
+  monthlyBudget Decimal?  @db.Decimal(10, 2)
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

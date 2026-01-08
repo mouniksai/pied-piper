@@ -2,7 +2,7 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { signup, login, logout, getMe } from '../controllers/authController.js'; // Import controller
+import { signup, login, logout, getMe, updateBudget } from '../controllers/authController.js'; // Import controller
 import { sendTokenResponse } from '../lib/authUtils.js';
 import { verifyToken } from '../middlewares/auth.js';
 
@@ -13,6 +13,7 @@ const router = express.Router();
 router.get('/me', verifyToken, getMe);
 router.post('/signup', signup);
 router.post('/login', login);
+router.put('/budget', verifyToken, updateBudget);
 
 // --- GOOGLE OAUTH ROUTES ---
 router.get('/google', passport.authenticate('google', {

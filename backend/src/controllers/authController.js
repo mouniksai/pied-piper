@@ -97,6 +97,27 @@ export const login = async (req, res) => {
   }
 };
 
+export const updateBudget = async (req, res) => {
+  try {
+    const { budget } = req.body;
+    
+    // Validate
+    if (!budget || isNaN(budget)) {
+      return res.status(400).json({ message: "Invalid budget amount" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: { monthlyBudget: parseFloat(budget) }
+    });
+
+    res.json({ success: true, budget: Number(updatedUser.monthlyBudget) });
+  } catch (error) {
+    console.error("Update Budget Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const logout = async (req, res) => {
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000), // Expire in 10 seconds
