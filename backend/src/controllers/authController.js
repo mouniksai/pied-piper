@@ -13,7 +13,6 @@ const generateToken = (user) => {
   );
 };
 
-// 1. SIGNUP
 export const getMe = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -119,11 +118,21 @@ export const updateBudget = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
+  // Clear the token cookie specifically with matching options
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: '/',
+  });
+
+  // Also try to clear any other cookies found in request
   for(const cookie in req.cookies) {
+    if (cookie === 'token') continue; // Already handled
     res.clearCookie(cookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      sameSite: "lax",
       path: '/',
     });
   }
