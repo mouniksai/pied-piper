@@ -7,6 +7,10 @@ export const splitTransaction = async (req, res) => {
   try {
     const { transactionId, splits } = req.body; 
 
+    if (!Array.isArray(splits) || splits.length === 0) {
+      return res.status(400).json({ error: "Invalid splits data. Must be a non-empty array." });
+    }
+
     // Verify ownership
     const transaction = await prisma.transaction.findUnique({ 
       where: { id: transactionId } 

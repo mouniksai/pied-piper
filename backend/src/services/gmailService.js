@@ -2,22 +2,36 @@
 import { google } from 'googleapis';
 import prisma from '../lib/prisma.js';
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'http://localhost:4000/auth/google/callback'
-);
-
 // Helper: Get Authenticated Client for a User
 const getGmailClient = async (userId) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !user.refreshToken) throw new Error("Missing Refresh Token");
 
-  oauth2Client.setCredentials({
+  // Create a new client instance for each request to avoid race conditions
+  const client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'http://localhost:4000/auth/google/callback'
+  );
+
+  client.setCredentials({
     refresh_token: user.refreshToken,
     access_token: user.accessToken
+    // Optional: expiry_date if you save it to DB
   });
-  return google.gmail({ version: 'v1', auth: oauth2Client });
+
+  // Handle token refresh events if needed (the library does this automatically if refresh_token is present)
+  // But we can listen to 'tokens' event to update DB if a new access token is issued
+  client.on('tokens', async (tokens) => {
+    if (tokens.access_token) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { accessToken: tokens.access_token }
+      });
+    }
+  });
+
+  return google.gmail({ version: 'v1', auth: client });
 };
 
 // 1. START WATCHING (Call this once when user logs in)

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database (Self-contained)
+  db:
+    image: postgres:15-alpine
+    container_name: argos_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hackathonpassword
+      POSTGRES_DB: argos_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5431:5432" # Expose to localhost if you want to check via pgAdmin
+
+  # 2. ARGOS Backend
+  backend:
+    build: ../backend
+    container_name: argos_backend
+    restart: always
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    environment:
+      # OVERRIDE the connection string to point to the 'db' container
+      DATABASE_URL: "postgresql://postgres:hackathonpassword@db:5432/argos_db?schema=public"
+      DIRECT_URL: "postgresql://postgres:hackathonpassword@db:5432/argos_db?schema=public"
+      
+      # Pass through other keys from your .env file
+      # You can hardcode non-sensitive ones or refer to local env
+      PORT: 4000
+      NODE_ENV: "development"
+      
+      # ⚠️ CRITICAL: The judge needs these. 
+      # For a hackathon, usually you paste them here OR tell the judge to create a .env file.
+      # Since we want "One Command", I recommend referencing a .env file.
+    env_file:
+      - ../backend/.env
+
+  frontend:
+    build: 
+      context: ../frontend # Relative path [cite: 48]
+    container_name: hackathon-frontend # [cite: 49]
+    ports:
+      - "3000:3000" # [cite: 51]
+    depends_on:
+      -   backend # [cite: 52]
+    environment:
+      # Frontend needs to know where the backend is
+      NEXT_PUBLIC_API_URL: "http://localhost:4000"
+
+volumes:
+  postgres_data:

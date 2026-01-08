@@ -14,6 +14,26 @@ const generateToken = (user) => {
 };
 
 // 1. SIGNUP
+export const getMe = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    console.error("GetMe Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const signup = async (req, res) => {
   try {
     const { email, password, name } = req.body;
@@ -77,11 +97,36 @@ export const login = async (req, res) => {
   }
 };
 
-export const logout = async (req, res) => {
-  res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000), // Expire in 10 seconds
-    httpOnly: true
-  });
+export const updateBudget = async (req, res) => {
+  try {
+    const { budget } = req.body;
+    
+    // Validate
+    if (!budget || isNaN(budget)) {
+      return res.status(400).json({ message: "Invalid budget amount" });
+    }
 
-  res.status(200).json({ success: true, message: "Logged out successfully" });
+    const updatedUser = await prisma.user.update({
+      where: { id: req.userId },
+      data: { monthlyBudget: parseFloat(budget) }
+    });
+
+    res.json({ success: true, budget: Number(updatedUser.monthlyBudget) });
+  } catch (error) {
+    console.error("Update Budget Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const logout = async (req, res) => {
+  for(const cookie in req.cookies) {
+    res.clearCookie(cookie, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "None",
+      path: '/',
+    });
+  }
+
+  return res.json({ success: true, message: "Logged out successfully" });
 };

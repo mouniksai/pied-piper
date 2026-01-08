@@ -19,7 +19,7 @@ export const sendTokenResponse = (user, statusCode, res) => {
 
   res
     .status(statusCode)
-    .cookie('token', token, options) // <--- SETTING THE COOKIE
+    .cookie('token', token, options)
     .json({
       success: true,
       token, // Optional: send back if needed for non-browser clients
