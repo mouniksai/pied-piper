@@ -1,0 +1,141 @@
+// DATA SOURCE & GENERATOR
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------
+// 1. USER: The Central Entity
+// ---------------------------------------------------------
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String?
+  name          String?
+  avatar        String?
+  googleId      String?   @unique
+  
+  // Auth Tokens (Crucial for Gmail Offline Access)
+  accessToken   String?
+  refreshToken  String?   @db.Text // Long-lived token for offline syncing
+  tokenExpiry   BigInt?   // Storing expiry as timestamp is often safer for math
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  transactions  Transaction[] // Expenses paid by this user
+  owedSplits    Split[]       @relation("Debtor") // Money this user owes to others
+  recurring     Recurring[]
+}
+
+// ---------------------------------------------------------
+// 2. TRANSACTION: The Financial Record
+// ---------------------------------------------------------
+model Transaction {
+  id            String   @id @default(uuid())
+  
+  // Ownership
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Gmail Sync Identity (CRITICAL FOR POLLING)
+  gmailMessageId String?  @unique // The unique ID from Gmail API. Prevents double-processing.
+
+  // Financial Data
+  amount        Decimal  @db.Decimal(10, 2)
+  currency      String   @default("INR")
+  date          DateTime
+  
+  // Categorization (AI Populated)
+  merchant      String?  // e.g., "Swiggy", "Uber"
+  category      String   @default("Uncategorized")
+  
+  // Banking Details (Parsed)
+  bankName      String?  // e.g., "HDFC", "SBI"
+  accountLast4  String?  // e.g., "1234"
+  utr           String?  // UPI Ref / Bank Ref
+  
+  // Source & Verification
+  source        Source   @default(GMAIL)
+  rawEmailBody  String?  @db.Text 
+  description   String?  // Manual note
+
+  // Extra AI Meta (For specific food items, flight PNRs, etc.)
+  metadata      Json?    
+
+  // Social
+  isSplit       Boolean  @default(false)
+  splits        Split[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Indexes
+  @@index([userId, date])
+  // We keep UTR unique per user, but only if UTR exists. 
+  // Note: Prisma treats multiple NULLs as valid unique constraints in Postgres.
+  @@unique([userId, utr]) 
+}
+
+// ---------------------------------------------------------
+// 3. SPLIT: The Social Debt Engine
+// ---------------------------------------------------------
+model Split {
+  id            String      @id @default(uuid())
+  
+  // The Expense
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  // The Person who OWES money (Debtor)
+  owedByUserId  String?
+  owedByUser    User?       @relation("Debtor", fields: [owedByUserId], references: [id])
+  
+  owedByName    String      // Fallback if not on app
+  owedByEmail   String?     // Fallback for notifications
+
+  // Debt Details
+  amount        Decimal     @db.Decimal(10, 2)
+  status        SplitStatus @default(PENDING)
+  
+  // Enforcement
+  reminderCount Int         @default(0)
+  lastRemindedAt DateTime?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// ---------------------------------------------------------
+// ENUMS
+// ---------------------------------------------------------
+enum Source {
+  GMAIL
+  MANUAL
+  WHATSAPP
+}
+
+enum SplitStatus {
+  PENDING
+  PAID
+  SETTLED
+}
+
+// Add this model
+model Recurring {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  name          String   // "Rent"
+  amount        Decimal  @db.Decimal(10, 2)
+  frequency     String   @default("MONTHLY") // For now, simple
+  nextDueDate   DateTime
+  isActive      Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+}
