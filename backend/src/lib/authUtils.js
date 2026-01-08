@@ -1,6 +1,20 @@
 // src/lib/authUtils.js
 import jwt from 'jsonwebtoken';
 
+// Helper for consistent cookie options
+export const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
+  
+  return {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    httpOnly: true,
+    secure: isProduction, // Must be true for SameSite=None
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/'
+  };
+};
+
 export const sendTokenResponse = (user, statusCode, res) => {
   // Create Token
   const token = jwt.sign(
@@ -9,21 +23,12 @@ export const sendTokenResponse = (user, statusCode, res) => {
     { expiresIn: '7d' }
   );
 
-  // Cookie Options
-  const options = {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: true, // JS cannot read this (XSS Protection)
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // CSRF protection
-    path: '/'
-  };
-
   res
     .status(statusCode)
-    .cookie('token', token, options)
+    .cookie('token', token, getCookieOptions())
     .json({
       success: true,
-      token, // Optional: send back if needed for non-browser clients
+      token, // Important for Bearer auth fallback
       user: { id: user.id, email: user.email, name: user.name }
     });
 };

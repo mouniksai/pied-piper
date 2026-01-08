@@ -42,15 +42,17 @@ services:
 
   frontend:
     build: 
-      context: ../frontend # Relative path [cite: 48]
-    container_name: hackathon-frontend # [cite: 49]
+      context: ../frontend
+      args:
+        NEXT_PUBLIC_BACKEND_URL: "http://localhost:4000"
+    container_name: hackathon-frontend
     ports:
-      - "3000:3000" # [cite: 51]
+      - "3000:3000"
     depends_on:
-      -   backend # [cite: 52]
+      -   backend
     environment:
-      # Frontend needs to know where the backend is
-      NEXT_PUBLIC_API_URL: "http://localhost:4000"
+      # Frontend needs to know where the backend is (Server Side)
+      NEXT_PUBLIC_BACKEND_URL: "http://localhost:4000"
 
 volumes:
   postgres_data:

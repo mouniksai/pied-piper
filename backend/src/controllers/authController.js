@@ -2,9 +2,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
-import { sendTokenResponse } from '../lib/authUtils.js';
+import { sendTokenResponse, getCookieOptions } from '../lib/authUtils.js';
 
-// Helper to generate Token
+// Helper to generate Token (Deprecated in favor of central authUtils, but kept if needed locally)
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email },
@@ -118,23 +118,16 @@ export const updateBudget = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  // Clear the token cookie specifically with matching options
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
-  });
+  const options = getCookieOptions();
+  
+  // Clear the token cookie
+  res.clearCookie('token', options);
 
-  // Also try to clear any other cookies found in request
+  // Also try to clear any other cookies found in request with the same options
+  // Note: We can't know exact path/domain of random cookies, but we try default options
   for(const cookie in req.cookies) {
-    if (cookie === 'token') continue; // Already handled
-    res.clearCookie(cookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/',
-    });
+    if (cookie === 'token') continue; 
+    res.clearCookie(cookie, options);
   }
 
   return res.json({ success: true, message: "Logged out successfully" });

@@ -27,11 +27,13 @@ import splitRoutes from './routes/splits.js';
 configurePassport(passport);
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+// Ensure no trailing slash for CORS matching
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, "");
 
 // Middleware
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+app.use(cors({ origin: FRONTEND_URL, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
@@ -59,5 +61,5 @@ app.get('/api/me', verifyToken, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🛡️  ARGOS Backend running on http://localhost:${PORT}`);
+  console.log(`🛡️  ARGOS Backend running on port ${PORT}`);
 });

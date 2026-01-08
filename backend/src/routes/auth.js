@@ -2,15 +2,17 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import { signup, login, logout, updateBudget } from '../controllers/authController.js';
+import { signup, login, logout, updateBudget, getMe } from '../controllers/authController.js';
 import { watchGmail } from '../services/gmailService.js'; 
 import { verifyToken } from '../middlewares/auth.js';
+import { getCookieOptions } from '../lib/authUtils.js';
 
 const router = express.Router();
 
 // --- DIRECT AUTH ROUTES ---
 router.post('/signup', signup);
 router.post('/login', login);
+router.get('/me', verifyToken, getMe);
 router.put('/budget', verifyToken, updateBudget);
 
 // --- GOOGLE OAUTH ROUTES ---
@@ -36,13 +38,8 @@ router.get('/google/callback',
         { expiresIn: '7d' }
       );
 
-      // B. Set Cookie
-      res.cookie('token', token, {
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-      });
+      // B. Set Cookie (Best effort for browsers that support 3rd party)
+      res.cookie('token', token, getCookieOptions());
 
 
       // C. START WATCHING AUTOMATICALLY (The Magic Step)
@@ -57,13 +54,17 @@ router.get('/google/callback',
         console.error("⚠️ Warning: Auto-Watch failed (User can still login):", watchError.message);
       }
 
-      // D. Redirect to Frontend
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/dashboard`);
+      // D. Redirect to Frontend (with Token fallback for cross-site)
+      const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = rawFrontendUrl.replace(/\/$/, "");
+      
+      // Pass token in query param. Frontend useAuthStore checks this.
+      res.redirect(`${frontendUrl}/dashboard?token=${token}`);
 
     } catch (error) {
       console.error("Login Callback Error:", error);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const frontendUrl = rawFrontendUrl.replace(/\/$/, "");
       res.redirect(`${frontendUrl}/login?error=server_error`);
     }
   }
