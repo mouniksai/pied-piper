@@ -23,6 +23,11 @@ export const getMe = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Safety: Remove sensitive data
+    user.password = undefined;
+    user.refreshToken = undefined;
+    user.accessToken = undefined;
+
     res.status(200).json({
       success: true,
       user: user
