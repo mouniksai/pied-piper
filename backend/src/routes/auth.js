@@ -44,6 +44,7 @@ router.get('/google/callback',
         sameSite: 'lax'
       });
 
+
       // C. START WATCHING AUTOMATICALLY (The Magic Step)
       // We await this so we confirm connection before user sees dashboard
       console.log(`🔌 Auto-initializing Gmail Watch for ${req.user.email}...`);
@@ -66,6 +67,6 @@ router.get('/google/callback',
   }
 );
 
-router.get('/logout', logout);
+router.post('/logout', logout);
 
 export default router;
