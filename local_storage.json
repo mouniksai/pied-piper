@@ -1,0 +1,68 @@
+[
+  {
+    "timestamp": "2026-01-08T08:55:10.594Z",
+    "data": {
+      "function": "getExpenses",
+      "result": [
+        {
+          "id": 3,
+          "date": "2026-01-07",
+          "category": "Groceries",
+          "amount": 85.2,
+          "description": "Weekly Groceries"
+        },
+        {
+          "id": 4,
+          "date": "2026-01-07",
+          "category": "Entertainment",
+          "amount": 120,
+          "description": "Concert Tickets"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-01-08T08:56:18.617Z",
+    "data": {
+      "function": "getExpenses",
+      "result": [
+        {
+          "id": 3,
+          "date": "2026-01-07",
+          "category": "Groceries",
+          "amount": 85.2,
+          "description": "Weekly Groceries"
+        },
+        {
+          "id": 4,
+          "date": "2026-01-07",
+          "category": "Entertainment",
+          "amount": 120,
+          "description": "Concert Tickets"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-01-08T08:58:47.832Z",
+    "data": {
+      "function": "getExpenses",
+      "result": [
+        {
+          "id": 3,
+          "date": "2026-01-07",
+          "category": "Groceries",
+          "amount": 85.2,
+          "description": "Weekly Groceries"
+        },
+        {
+          "id": 4,
+          "date": "2026-01-07",
+          "category": "Entertainment",
+          "amount": 120,
+          "description": "Concert Tickets"
+        }
+      ]
+    }
+  }
+]
