@@ -4,6 +4,12 @@ ARGOS is a real-time financial tracking dashboard that automates expense managem
 
 Both the frontend and backend services are fully deployed and containerized, allowing for effortless setup and testing. Reviewers can pull the pre-built images directly from Docker Hub to run the application locally without complex environment configuration.
 
+⚠️ Note on Demo Transaction Simulation
+To facilitate testing during the hackathon, we have temporarily adjusted the sender verification logic. Since triggering live banking alerts via real transactions is impractical for a quick demonstration, ARGOS is currently configured to accept transaction-like emails from any sender.
+
+For the purpose of this demo, you can trigger the system by sending an email from a personal account (or a friend's) to the connected inbox with a body like "Paid Rs 500 to Starbucks". The system will process these user-generated emails exactly as it would an official bank notification, allowing you to instantly verify the webhook latency and AI parsing capabilities.
+
+
 ## System Architecture
 
 The application is built on a modern microservices-inspired architecture:
