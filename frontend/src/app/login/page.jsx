@@ -2,13 +2,13 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import useFormStore from "../store/useFormStore";
-import TopGraphic from "../../components/TopGraphic";
-import StepHeader from "../../components/StepHeader";
-import Step1 from "../../components/steps/Step1";
-import Step2Login from "../../components/steps/Step2Login";
-import Step2Signup from "../../components/steps/Step2Signup";
-import Step3Confirm from "../../components/steps/Step3Confirm";
+import useFormStore from "../../store/useFormStore";
+import TopGraphic from "../../../components/TopGraphic";
+import StepHeader from "../../../components/StepHeader";
+import Step1 from "../../../components/steps/Step1";
+import Step2Login from "../../../components/steps/Step2Login";
+import Step2Signup from "../../../components/steps/Step2Signup";
+import Step3Confirm from "../../../components/steps/Step3Confirm";
 
 export default function LoginPage() {
   const { currentStep, flowType, setStep } = useFormStore();
