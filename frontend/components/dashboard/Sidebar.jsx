@@ -19,8 +19,8 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Home, label: 'Home', href: '/dashboard' },
     { icon: CreditCard, label: 'Expenses', href: '/expenses' },
-    { icon: FileText, label: 'Summary', href: '/summary' },
-    { icon: Shield, label: 'Privacy', href: '/privacy' },
+    // { icon: FileText, label: 'Summary', href: '/summary' },
+    // { icon: Shield, label: 'Privacy', href: '/privacy' },
   ];
 
   return (

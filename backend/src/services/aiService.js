@@ -48,3 +48,29 @@ export const parseTransactionWithAI = async (emailSnippet, emailDate) => {
     return null;
   }
 };
+
+export const generateFinancialSummary = async (stats) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    const prompt = `
+      You are a friendly financial assistant named Jared.
+      Analyze the following monthly stats and give a very short, concise summary (max 2 sentences).
+      Be encouraging but realistic.
+
+      Stats:
+      - Total Spent: ${stats.totalSpent}
+      - Monthly Budget: ${stats.budget}
+      - Spending Trend: ${stats.trend.isIncrease ? 'Up' : 'Down'} by ${stats.trend.value}%
+      
+      Response:
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text().trim();
+  } catch (error) {
+    console.error("AI Summary Error:", error);
+    return "I couldn't generate a summary right now, but your stats are loaded below.";
+  }
+};

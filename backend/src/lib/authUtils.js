@@ -14,7 +14,8 @@ export const sendTokenResponse = (user, statusCode, res) => {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     httpOnly: true, // JS cannot read this (XSS Protection)
     secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-    sameSite: 'lax' // CSRF protection
+    sameSite: 'lax', // CSRF protection
+    path: '/'
   };
 
   res
