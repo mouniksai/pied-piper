@@ -31,7 +31,7 @@ export const fetchGoogleContacts = async (userId) => {
     name: person.names?.[0]?.displayName || "Unknown",
     email: person.emailAddresses?.[0]?.value || null,
     photo: person.photos?.[0]?.url || null
-  })).filter(c => c.email); // Only return contacts with emails
+  })); // Only return contacts with emails
 
   return contacts;
 };
